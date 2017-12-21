@@ -3,3 +3,4 @@ PajekFactory and AutoID are modified from: https://github.com/jevinw/rec_utiliti
 """
 
 from .PajekFactor import *
+from .network_utils import *
