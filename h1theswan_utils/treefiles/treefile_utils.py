@@ -71,7 +71,7 @@ class Treefile(object):
         df['top_cluster'] = top_cluster
         return df
         
-    def top_cluster_counts(self, df=None):
+    def get_top_cluster_counts(self, df=None):
         df = df or self.df
         if df is None:  # if it's still not there, load it (parsing the treefile if necessary)
             df = self.load_df()
@@ -80,7 +80,7 @@ class Treefile(object):
         self.top_cluster_counts = df['top_cluster'].value_counts()
         return self.top_cluster_counts
 
-    def get_nodes_for_cluster(self, df=None, cluster_name=None):
+    def get_nodes_for_cluster(self, cluster_name=None, df=None):
         """get a list of the node names for one cluster
 
         :returns: list of node names
