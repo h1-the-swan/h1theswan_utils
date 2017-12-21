@@ -32,12 +32,16 @@ def extract_subgraph_from_pajek(fname_pjk, names):
         new_idx = 0
         old_new_idx_dict = {}
         for i, line in enumerate(f):
+            if i in [10, 100, 1000, 10000, 100000, 1000000] or i % 5000000 == 0:
+                logger.debug("reading line {}. currently in subgraph: {} vertices and {} edges".format(i, len(lines['vertices']), len(lines['edges'])))
             if line[0] == '*':
                 if line[1].lower() == 'v':  # this should happen on the very first line
                     mode = 'v'
+                    logger.debug("starting to process vertices. {}".format(line.strip()))
                 elif line[1].lower() in ['a', 'e']:  # 'arcs' or 'edges'
                     indices = set(indices)
                     mode = 'e'
+                    logger.debug("starting to process edges. {}".format(line.strip()))
                 continue
 
             if mode == 'v':
