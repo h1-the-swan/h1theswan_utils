@@ -63,7 +63,8 @@ class Treefile(object):
         return self.df
 
     def add_top_cluster_column_to_df(self, df=None):
-        df = df or self.df
+        if df is None:
+            df = self.df
         if df is None:
             raise RuntimeError("df is not specified. call load_df() to load the dataframe")
         top_cluster = df['path'].apply(lambda x: x.split(self.cluster_sep)[0])
@@ -72,7 +73,8 @@ class Treefile(object):
         return df
         
     def get_top_cluster_counts(self, df=None):
-        df = df or self.df
+        if df is None:
+            df = self.df
         if df is None:  # if it's still not there, load it (parsing the treefile if necessary)
             df = self.load_df()
         
@@ -90,7 +92,8 @@ class Treefile(object):
             raise RuntimeError("must specify cluster_name")
 
         # TODO: could reimplement this so it doesn't use pandas. might be more efficient
-        df = df or self.df
+        if df is None:
+            df = self.df
         if df is None:  # if it's still not there, load it (parsing the treefile if necessary)
             df = self.load_df()
 
