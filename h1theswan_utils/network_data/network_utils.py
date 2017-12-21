@@ -78,11 +78,13 @@ def write_pajek_from_full_lines(lines, outfname, vertices_label='vertices', edge
     """
     with open(outfname, 'w') as outf:
         num_vertices = len(lines['vertices'])
+        logger.debug('writing {} {}...'.format(num_vertices, vetices_label))
         outf.write('*{} {}\n'.format(vertices_label, num_vertices))
         for line in lines['vertices']:
             outf.write(line)
 
         num_edges = len(lines['edges'])
+        logger.debug('writing {} {}...'.format(num_vertices, edges_label))
         outf.write('*{} {}\n'.format(edges_label, num_edges))
         for line in lines['edges']:
             outf.write(line)
