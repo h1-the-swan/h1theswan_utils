@@ -20,6 +20,7 @@ class Treefile(object):
         self.cluster_sep = cluster_sep
 
         self.d = None
+        self.df = None
 
     def parse(self, fname=None):
         """Parse the treefile
@@ -59,4 +60,13 @@ class Treefile(object):
 
         self.df = pd.DataFrame(self.d)
         return self.df
+
+    def top_cluster_counts(self, df=None):
+        if df is None:
+            df = self.df
+        if df is None:  # if it's still not there, load it (parsing the treefile if necessary)
+            df = self.load_df()
         
+        top_cluster = df['path'].apply(lambda x: x.split(self.cluster_sep)[0])
+        top_cluster.name = 'top_cluster'
+        return top_cluster.value_counts()
