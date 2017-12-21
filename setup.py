@@ -20,6 +20,7 @@ setup(
     author_email='jason.portenoy@gmail.com',
     url='https://github.com/h1-the-swan/h1theswan_utils',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
+    packages=find_packages(exclude=('tests', 'docs')),
+    install_requires=['pandas', 'numpy']
 )
 
