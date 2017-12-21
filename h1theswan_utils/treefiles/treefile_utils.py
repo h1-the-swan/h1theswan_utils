@@ -80,3 +80,22 @@ class Treefile(object):
         self.top_cluster_counts = df['top_cluster'].value_counts()
         return self.top_cluster_counts
 
+    def get_nodes_for_cluster(self, df=None, cluster_name=None):
+        """get a list of the node names for one cluster
+
+        :returns: list of node names
+
+        """
+        if cluster_name is None:
+            raise RuntimeError("must specify cluster_name")
+
+        # TODO: could reimplement this so it doesn't use pandas. might be more efficient
+        df = df or self.df
+        if df is None:  # if it's still not there, load it (parsing the treefile if necessary)
+            df = self.load_df()
+
+        if 'top_cluster' not in df.columns:
+            self.df = add_top_cluster_column_to_df(df=df)
+
+        subset = df[df['top_cluster']==cluster_name]
+        return subset['name'].tolist()
