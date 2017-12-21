@@ -21,6 +21,7 @@ class Treefile(object):
 
         self.d = None
         self.df = None
+        self.top_cluster_counts = None
 
     def parse(self, fname=None):
         """Parse the treefile
@@ -61,12 +62,21 @@ class Treefile(object):
         self.df = pd.DataFrame(self.d)
         return self.df
 
-    def top_cluster_counts(self, df=None):
+    def add_top_cluster_column_to_df(self, df=None):
+        df = df or self.df
         if df is None:
-            df = self.df
+            raise RuntimeError("df is not specified. call load_df() to load the dataframe")
+        top_cluster = df['path'].apply(lambda x: x.split(self.cluster_sep)[0])
+        top_cluster.name = 'top_cluster'
+        df['top_cluster'] = top_cluster
+        return df
+        
+    def top_cluster_counts(self, df=None):
+        df = df or self.df
         if df is None:  # if it's still not there, load it (parsing the treefile if necessary)
             df = self.load_df()
         
-        top_cluster = df['path'].apply(lambda x: x.split(self.cluster_sep)[0])
-        top_cluster.name = 'top_cluster'
-        return top_cluster.value_counts()
+        df = self.add_top_cluster_column_to_df(df=df)
+        self.top_cluster_counts = df['top_cluster'].value_counts()
+        return self.top_cluster_counts
+
