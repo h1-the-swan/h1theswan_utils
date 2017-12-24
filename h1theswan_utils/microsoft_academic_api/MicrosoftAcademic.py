@@ -15,62 +15,160 @@ class QueryTypeError(ValueError):
     The query type is not valid or not implemented.
     """
 
+class QueryPostError(RuntimeError):
+    """
+    Error when issuing query POST
+    """
+
+class QueryTimeoutError(RuntimeError):
+    """
+    Timeout Error when issuing query POST
+    """
+
 
 class MAGQuery(object):
 
     """Microsoft Academic API Query"""
 
-    def __init__(self, query_type, arguments={}):
+    def __init__(self):
         """TODO: to be defined1. """
-        self.query_type = query_type
-        self.arguments = arguments
+        self.query_type = MAGQueryType.UNKNOWN
 
         self.url = MAGConf.BASE_URL  # will need to modify this later depending on the query type
-        self.headers = {
-            'Ocp-Apim-Subscription-Key': MAGConf.MICROSOFT_ACADEMIC_KEY
-        }
         self.body = {}
+        self.headers = {}
 
-        if isinstance(self.query_type, string_types):
-            self.query_type = assign_query_type(self.query_type)
+        # if isinstance(self.query_type, string_types):
+        #     self.query_type = assign_query_type(self.query_type)
 
-        if not isinstance(self.query_type, MAGQueryType) or self.query_type == MAGQueryType.UNKNOWN:
-            raise QueryTypeError("invalid query type: {}".format(self.query_type))
+        # if not isinstance(self.query_type, magquerytype) or self.query_type == magquerytype.unknown:
+        #     raise QueryTypeError("invalid query type: {}".format(self.query_type))
 
-        configure_query(self.query_type)
+    def get_headers(self):
+        return {
+            'Ocp-Apim-Subscription-Key': MAGConf.SUBSCRIPTION_KEY
+        }
 
-    def assign_query_type(qt):
-        qt = qt.lower()
-        if qt in ['histogram', 'hist', 'h']:
-            return MAGQueryType.HISTOGRAM
-        elif qt in ['interpret', 'interp', 'i']:
-            return MAGQueryType.INTERPRET
-        elif qt in ['evaluate', 'eval', 'e']:
-            return MAGQueryType.EVALUATE
-        elif qt in ['similarity', 'simil', 'sim', 's']:
-            return MAGQueryType.SIMILARITY
-        elif qt in ['graph_traversal', 'graph', 'gt', 'g']:
-            return MAGQueryType.GRAPH_TRAVERSAL
-        return MAGQueryType.UNKNOWN
+    def get_url(self):
+        raise NotImplementedError("get_url() is not implemented in base class")
 
-    def configure_query(self, qtype):
-        if qtype == MAGQueryType.HISTOGRAM:
-            raise NotImplementedError("This query type is not yet implemented: {}".format(qtype))
-        elif qtype == MAGQueryType.INTERPRET:
-            pass
-        elif qtype == MAGQueryType.EVALUATE:
-            pass
-        elif qtype == MAGQueryType.SIMILARITY:
-            raise NotImplementedError("This query type is not yet implemented: {}".format(qtype))
-        if qtype == MAGQueryType.GRAPH_TRAVERSAL:
-            raise NotImplementedError("This query type is not yet implemented: {}".format(qtype))
+    def get_body(self):
+        raise NotImplementedError("get_body() is not implemented in base class")
 
-class EvaluateQuery(object):
+    def post(self, return_json=True):
+        url = self.get_url()
+        headers = self.get_headers()
+        body = self.get_body()
+        r = requests.post(url, data=body, headers=headers)
+        if r.status_code >= 300:
+            raise QueryPostError("An error occurred during the query. Status code: {}".format(r.status_code))
+        j = r.json()
+        if j.get('aborted'):
+            raise QueryTimeoutError("The query POST request encountered a timeout and aborted")
+        if return_json:
+            return j
+        else:
+            return r
+
+
+    # def assign_query_type(qt):
+    #     qt = qt.lower()
+    #     if qt in ['histogram', 'hist', 'h']:
+    #         return MAGQueryType.HISTOGRAM
+    #     elif qt in ['interpret', 'interp', 'i']:
+    #         return MAGQueryType.INTERPRET
+    #     elif qt in ['evaluate', 'eval', 'e']:
+    #         return MAGQueryType.EVALUATE
+    #     elif qt in ['similarity', 'simil', 'sim', 's']:
+    #         return MAGQueryType.SIMILARITY
+    #     elif qt in ['graph_traversal', 'graph', 'gt', 'g']:
+    #         return MAGQueryType.GRAPH_TRAVERSAL
+    #     return MAGQueryType.UNKNOWN
+
+
+class EvaluateQuery(MAGQuery):
 
     """Docstring for EvaluateQuery. """
 
-    def __init__(self):
+    URL = MAGConf.BASE_URL + '/evaluate'
+    def __init__(self, expr=None,
+                    attributes=None,
+                    count=None,
+                    offset=None,
+                    model=None):
         """TODO: to be defined1. """
+        MAGQuery.__init__(self)
+
+        self.query_type = MAGQueryType.EVALUATE
+
+        self.expr = expr
+        self.attributes = attributes or MAGConf.EVALUATE_QUERY_DEFAULTS['attributes']
+        self.count = count or MAGConf.EVALUATE_QUERY_DEFAULTS['count']
+        self.offset = offset or MAGConf.EVALUATE_QUERY_DEFAULTS['offset']
+        self.model = model or MAGConf.EVALUATE_QUERY_DEFAULTS['model']
+
+    def get_url(self):
+        return self.URL
+
+    def get_body(self):
+        if not self.expr:
+            raise RuntimeError("the evaluate query needs an expr")
+
+        args = {
+            'expr': self.expr,
+            'attributes': self.attributes,
+            'count': self.count,
+            'offset': self.offset,
+            'model': self.model
+        }
+        return args
+    
+class InterpretQuery(MAGQuery):
+
+    """Docstring for InterpretQuery. """
+
+    URL = MAGConf.BASE_URL + '/interpret'
+    def __init__(self, query,
+            complete=None,
+            count=None,
+            offset=None,
+            timeout=None,
+            model=None):
+        """
+
+        :query: TODO
+        :complete: TODO
+        :count: TODO
+        :offset: TODO
+        :timeout: TODO
+        :model: TODO
+
+        """
+        MAGQuery.__init__(self)
+
+        self.query = query
+        self.complete = complete or MAGConf.INTERPET_QUERY_DEFAULTS['complete']
+        self.count = count or MAGConf.INTERPET_QUERY_DEFAULTS['count']
+        self.offset = offset or MAGConf.INTERPET_QUERY_DEFAULTS['offset']
+        self.timeout = timeout or MAGConf.INTERPET_QUERY_DEFAULTS['timeout']
+        self.model = model or MAGConf.INTERPET_QUERY_DEFAULTS['model']
+
+    def get_url(self):
+        return self.URL
+
+    def get_body(self):
+        if not self.query:
+            raise RuntimeError("the interpret query needs a query")
+
+        args = {
+            'query': self.query,
+            'complete': self.complete,
+            'count': self.count,
+            'offset': self.offset,
+            'timeout': self.timeout,
+            'model': self.model
+        }
+        return args
         
 
         
