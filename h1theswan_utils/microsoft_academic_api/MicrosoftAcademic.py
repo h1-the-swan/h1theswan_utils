@@ -128,7 +128,7 @@ class InterpretQuery(MAGQuery):
     """Docstring for InterpretQuery. """
 
     URL = MAGConf.BASE_URL + '/interpret'
-    def __init__(self, query,
+    def __init__(self, query=None,
             complete=None,
             count=None,
             offset=None,
@@ -145,6 +145,8 @@ class InterpretQuery(MAGQuery):
 
         """
         MAGQuery.__init__(self)
+
+        self.query_type = MAGQueryType.INTERPRET
 
         self.query = query
         self.complete = complete or MAGConf.INTERPET_QUERY_DEFAULTS['complete']
@@ -169,6 +171,31 @@ class InterpretQuery(MAGQuery):
             'model': self.model
         }
         return args
+
+    def get_first_expr(self, query=None):
+        """Issue a post request and get the first expression from the query
+        :returns: expr (string), to use in an Evaluate query
+
+        """
+        if query:
+            self.query = query
+        j = self.post()
+        interpretations = j.get('interpretations')
+        if not interpretations:
+            return None
+        rules = interpretations[0]['rules']
+        first_result = rules[0]['output']
+        if first_result['type'] != 'query':
+            raise RuntimeError("unexpected---first result is not type: query (type: {})".format(first_result['type']))
+        return first_result.get('value')
         
 
         
+def get_first_result_from_query(query):
+    expr = InterpretQuery().get_first_expr(query)
+    if expr:
+        q = EvaluateQuery(expr, count=1)
+        j = q.post()
+        if j:
+            return j['entities'][0]
+    return None
