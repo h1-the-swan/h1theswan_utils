@@ -20,6 +20,11 @@ class QueryPostError(RuntimeError):
     Error when issuing query POST
     """
 
+class QueryGetError(RuntimeError):
+    """
+    Error when issuing query GET
+    """
+
 class QueryTimeoutError(RuntimeError):
     """
     Timeout Error when issuing query POST
@@ -65,6 +70,22 @@ class MAGQuery(object):
         j = r.json()
         if j.get('aborted'):
             raise QueryTimeoutError("The query POST request encountered a timeout and aborted")
+        if return_json:
+            return j
+        else:
+            return r
+
+    def get(self, return_json=True):
+        # for Evaluate and Interpret queries, get() can be used as an alternative to post()
+        url = self.get_url()
+        headers = self.get_headers()
+        body = self.get_body()
+        r = requests.get(url, params=body, headers=headers)
+        if r.status_code >= 300:
+            raise QueryGetError("An error occurred during the query. Status code: {}".format(r.status_code))
+        j = r.json()
+        if j.get('aborted'):
+            raise QueryTimeoutError("The query GET request encountered a timeout and aborted")
         if return_json:
             return j
         else:
@@ -199,3 +220,24 @@ def get_first_result_from_query(query):
         if j:
             return j['entities'][0]
     return None
+
+class GraphSearchQuery(MAGQuery):
+
+    """Docstring for GraphSearchQuery. """
+
+    URL = MAGConf.BASE_URL + '/graph/search?json'
+    def __init__(self, json_body=None):
+        """TODO: to be defined1. """
+        MAGQuery.__init__(self)
+        self.json_body = json_body
+
+        self.query_type = MAGQueryType.GRAPH_TRAVERSAL
+
+    def get_url(self):
+        return self.URL
+
+    def get_body(self):
+        if not self.json_body:
+            raise RuntimeError("the GraphSearch query needs a json_body")
+
+        return self.json_body
