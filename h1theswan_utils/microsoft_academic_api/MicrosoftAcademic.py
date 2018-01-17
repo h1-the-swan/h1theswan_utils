@@ -194,13 +194,15 @@ class InterpretQuery(MAGQuery):
         return args
 
     def get_first_expr(self, query=None):
-        """Issue a post request and get the first expression from the query
+        """Issue a GET request and get the first expression from the query
         :returns: expr (string), to use in an Evaluate query
 
         """
         if query:
             self.query = query
-        j = self.post()
+        # j = self.post()
+        # POST method has been giving me trouble. use GET instead
+        j = self.get()
         interpretations = j.get('interpretations')
         if not interpretations:
             return None
@@ -216,7 +218,9 @@ def get_first_result_from_query(query):
     expr = InterpretQuery().get_first_expr(query)
     if expr:
         q = EvaluateQuery(expr, count=1)
-        j = q.post()
+        # j = q.post()
+        # POST method has been giving me trouble. use GET instead
+        j = q.get()
         if j:
             return j['entities'][0]
     return None
