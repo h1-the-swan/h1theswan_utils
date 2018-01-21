@@ -9,6 +9,7 @@ class PajekFactory(object):
     def __init__(self, 
                     edge_stream=None, 
                     node_stream=None, 
+                    weighted=False,
                     temp_dir=None, 
                     vertices_label='Vertices', 
                     edges_label='Arcs'):
@@ -17,6 +18,7 @@ class PajekFactory(object):
         Args:
             edge_stream: If provided, a stream that edges will be written to. Otherwise a temporary file is used.
             node_stream: If provided, a stream that nodes will be written to. Otherwise a temporary file is used.
+            weighted: True for weighted networks. Default is False.
             temp_dir: If provided, the directory to write temporary files to.
             vertices_label: label to use for the Vertices section of the output file. Default: 'Vertices'
             edges_label: label to use for the Edges section fo the output file. Note: directed graphs should use 'Arcs'. Undirected graphs should use 'Edges'. Default: 'Arcs'
@@ -24,6 +26,7 @@ class PajekFactory(object):
         self.ids = AutoID(first_id=1)
         self.edge_stream = edge_stream
         self.node_stream = node_stream
+        self.weighted = weighted
 
         self.vertices_label = vertices_label
         self.edges_label = edges_label
@@ -35,7 +38,7 @@ class PajekFactory(object):
 
         self.edge_count = 0
 
-    def add_edge(self, source, dest):
+    def add_edge(self, source, dest, weight=1):
         """Add an edge from source to dest.
 
         Names, **not** ids should be used here.
@@ -47,6 +50,9 @@ class PajekFactory(object):
         Returns:
             None
         """
+
+        if self.weighted is False and weight != 1:
+            raise ValueError("Illegal `weight` argument given: {}. This should be an unweighted network. For a weighted network, set PajekFactory.weighted to True".format(weight))
 
         write_source = source not in self.ids
         sid = self.ids[source]
@@ -60,7 +66,10 @@ class PajekFactory(object):
         if write_dest:
             self.node_stream.write('%s "%s"\n' % (did, dest))
 
-        self.edge_stream.write("%s %s\n" % (sid, did))
+        if self.weighted is True:
+            self.edge_stream.write("%s %s %s\n" % (sid, did, weight))
+        else:
+            self.edge_stream.write("%s %s\n" % (sid, did))
         self.edge_count += 1
 
     def write(self, output, vertices_label=None, edges_label=None):
