@@ -1,4 +1,5 @@
 from timeit import default_timer as timer
+from six import string_types
 try:
     from humanfriendly import format_timespan
 except ImportError:
@@ -101,3 +102,42 @@ def extract_subgraph_from_pajek_and_write_to_pajek(input_fname,
     lines = extract_subgraph_from_pajek(input_fname, subset_names)
     write_pajek_from_full_lines(lines, output_fname, vertices_label=vertices_label, edges_label=edges_label)
 
+def edgelist_to_pajek(f, sep='\t', header=True, temp_dir=None, weighted=False):
+    """Convert an edgelist file to Pajek form.
+    Takes a file containing an edgelist, and return a PajekFactory object.
+    To write the pajek (.net) file, call write() on the PajekFactory, e.g.:
+    pjk = edgelist_to_pajek(edgelist_file)
+    with open(pajek_fname, 'w') as outf:
+        pjk.write(outf)
+
+    :f: edgelist file object or filename
+    :sep: delimiter for the edgelist file
+    :header: boolean. Does the edgelist file contain a header row
+    :temp_dir: (optional) Directory for a temporary file used by the PajekFactory
+    :weighted: boolean. Denotes a weighted network. If the network is unweighted, the input file should have two columns. If weighted, the input edgelist should have three columns.
+    :returns: PajekFactory object
+
+    """
+    from . import PajekFactory
+    pjk = PajekFactory(temp_dir=temp_dir, weighted=weighted)
+    if isinstance(f, string_types):
+        f = open(f, 'r')
+        close_at_end = True
+    else:
+        close_at_end = False
+    rownum = 0
+    for i, line in enumerate(f):
+        if header is True and i == 0:
+            continue
+        split = line.strip().split(sep)
+        if weighted is True:
+            pjk.add_edge(split[0], split[1], weight=split[2])
+        else:
+            pjk.add_edge(split[0], split[1])
+        rownum += 1
+        if (rownum in [1,5,10,50,100,1000,10000,100000,1e6,10e6] or (rownum % 50e6 == 0)):
+            logger.debug('{} edges added'.format(rownum))
+    logger.debug("done. {} edges added".format(rownum))
+    if close_at_end:
+        f.close()
+    return pjk
