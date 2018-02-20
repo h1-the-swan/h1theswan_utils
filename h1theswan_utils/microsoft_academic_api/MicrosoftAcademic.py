@@ -214,10 +214,10 @@ class InterpretQuery(MAGQuery):
         
 
         
-def get_first_result_from_query(query):
+def get_first_result_from_query(query, attributes=None):
     expr = InterpretQuery().get_first_expr(query)
     if expr:
-        q = EvaluateQuery(expr, count=1)
+        q = EvaluateQuery(expr, count=1, attributes=attributes)
         # j = q.post()
         # POST method has been giving me trouble. use GET instead
         j = q.get()
@@ -225,10 +225,10 @@ def get_first_result_from_query(query):
             return j['entities'][0]
     return None
 
-def get_top_results_from_query(query, n=10):
+def get_top_results_from_query(query, n=10, attributes=None):
     expr = InterpretQuery().get_first_expr(query)
     if expr:
-        q = EvaluateQuery(expr, count=n)
+        q = EvaluateQuery(expr, count=n, attributes=attributes)
         # j = q.post()
         # POST method has been giving me trouble. use GET instead
         j = q.get()
