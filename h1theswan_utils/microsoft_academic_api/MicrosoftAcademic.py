@@ -225,6 +225,17 @@ def get_first_result_from_query(query):
             return j['entities'][0]
     return None
 
+def get_top_results_from_query(query, n=10):
+    expr = InterpretQuery().get_first_expr(query)
+    if expr:
+        q = EvaluateQuery(expr, count=n)
+        # j = q.post()
+        # POST method has been giving me trouble. use GET instead
+        j = q.get()
+        if j:
+            return j['entities']
+    return None
+
 class GraphSearchQuery(MAGQuery):
 
     """Docstring for GraphSearchQuery. """
