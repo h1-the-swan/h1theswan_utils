@@ -1,6 +1,6 @@
 from .config import MAGConf
 import requests
-from six import string_types
+from six import string_types, iteritems, itervalues
 
 class MAGQueryType(object):
     HISTOGRAM = 0
@@ -235,6 +235,34 @@ def get_top_results_from_query(query, n=10, attributes=None):
         if j:
             return j['entities']
     return None
+
+def convert_inverted_abstract_to_abstract_words(inverted_abstract, index_length=None):
+    """Convert an inverted abstract (a dictionary of word -> list of positions)
+    to an ordered list of words representing the abstract
+
+    :inverted_abstract: dict
+    :index_length: int: the number of words in the abstract
+    :returns: list
+
+    """
+    if index_length is None:
+        # if the number of words is not provided, find it
+        indices = set()
+        for v in itervalues(inverted_abstract):
+            for idx in v:
+                indices.add(idx)
+        index_length = max(indices) + 1
+
+    # reverse the inverted abstract
+    iabs_rev = {}
+    for k, v in iteritems(inverted_abstract):
+        for idx in v:
+            iabs_rev[idx] = k
+    # reconstruct the abstract
+    abs_words = []
+    for i in range(index_length):
+        abs_words.append(iabs_rev[i])
+    return abs_words
 
 class GraphSearchQuery(MAGQuery):
 
