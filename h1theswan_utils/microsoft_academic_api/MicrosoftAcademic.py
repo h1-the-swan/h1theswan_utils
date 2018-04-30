@@ -257,14 +257,14 @@ def convert_inverted_abstract_to_abstract_words(inverted_abstract, index_length=
     iabs_rev = {}
     for k, v in iteritems(inverted_abstract):
         for idx in v:
-            try:
-                iabs_rev[idx] = k
-            except KeyError:
-                pass
+            iabs_rev[idx] = k
     # reconstruct the abstract
     abs_words = []
     for i in range(index_length):
-        abs_words.append(iabs_rev[i])
+        try:
+            abs_words.append(iabs_rev[i])
+        except KeyError:
+            pass
     return abs_words
 
 class GraphSearchQuery(MAGQuery):
