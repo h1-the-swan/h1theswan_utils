@@ -257,7 +257,10 @@ def convert_inverted_abstract_to_abstract_words(inverted_abstract, index_length=
     iabs_rev = {}
     for k, v in iteritems(inverted_abstract):
         for idx in v:
-            iabs_rev[idx] = k
+            try:
+                iabs_rev[idx] = k
+            except KeyError:
+                pass
     # reconstruct the abstract
     abs_words = []
     for i in range(index_length):
