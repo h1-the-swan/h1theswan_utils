@@ -134,7 +134,7 @@ class EvaluateQuery(MAGQuery):
         # maximum 100 papers ids
         id_exprs = []
         for x in id_list:
-            id_exprs.append("Id={}".format(pid))
+            id_exprs.append("Id={}".format(x))
         id_exprs = ",".join(id_exprs)
         expr = "Or({})".format(id_exprs)
         return cls(expr)
