@@ -128,6 +128,17 @@ class EvaluateQuery(MAGQuery):
         self.offset = offset or MAGConf.EVALUATE_QUERY_DEFAULTS['offset']
         self.model = model or MAGConf.EVALUATE_QUERY_DEFAULTS['model']
 
+    @classmethod
+    def from_id_list(cls, id_list):
+        # construct an EvaluateQuery object for a list of paper ids
+        # maximum 100 papers ids
+        id_exprs = []
+        for x in id_list:
+            id_exprs.append("Id={}".format(pid))
+        id_exprs = ",".join(id_exprs)
+        expr = "Or({})".format(id_exprs)
+        return cls(expr)
+
     def get_url(self):
         return self.URL
 
