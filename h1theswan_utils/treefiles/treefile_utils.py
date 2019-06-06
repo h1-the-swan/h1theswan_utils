@@ -97,8 +97,16 @@ class Treefile(object):
         if df is None:  # if it's still not there, load it (parsing the treefile if necessary)
             df = self.load_df()
 
-        if 'top_cluster' not in df.columns:
-            self.df = add_top_cluster_column_to_df(df=df)
+        if self.cluster_sep not in str(cluster_name):
+            # assume this is a top-level cluster
+            if 'top_cluster' not in df.columns:
+                self.df = add_top_cluster_column_to_df(df=df)
+            subset = df[df['top_cluster']==cluster_name]
 
-        subset = df[df['top_cluster']==cluster_name]
+        else:
+            # make sure the cluster separator is the last character in cluster_name
+            if cluster_name[-1] != self.cluster_sep:
+                cluster_name = cluster_name + self.cluster_sep
+            subset = df[df['path'].str.startswith(cluster_name)]
+
         return subset['name'].tolist()
